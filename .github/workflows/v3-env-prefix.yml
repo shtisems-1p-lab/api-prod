@@ -1,0 +1,27 @@
+name: op-probe
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/v3-env-prefix.yml']
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Load secrets from 1Password Environment
+        id: op
+        continue-on-error: true
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_WORKLOAD_ID: MHUEZLJQCBFLLCJZFAKT2S7VZY
+          OP_ENVIRONMENT_ID: kpqzp4sqzsqg5ia4kxbejdrvza
+          OP_INTEGRATION_KEY: ${{ secrets.OP_INTEGRATION_KEY }}
+      - name: Report (never prints the value)
+        run: |
+          echo "VARIANT=v3-env-prefix name=op-probe env=prod load_step=${{ steps.op.outcome }}"
+          if [ "${PROD_DB_PASSWORD:-}" = "PRODMARK-7731" ]; then echo "RESULT=SECRET_RECEIVED"; else echo "RESULT=NO_SECRET"; fi
